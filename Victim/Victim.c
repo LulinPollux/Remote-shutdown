@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define BROADCASTIP "255.255.255.255"
-#define BROADCASTPORT 50000
+#define BROADCASTPORT 50001
 
 
 //오류 메시지를 출력하고 프로그램을 종료하는 함수
@@ -65,12 +65,12 @@ DWORD WINAPI broadcastSender(LPVOID arg)
 	//통신에 사용할 변수를 선언한다.
 	char buffer[50] = { '\0' };
 
+	//송신할 데이터를 복사한다.
+	strcpy_s(buffer, sizeof(buffer), "Ready!");
+
 	while (1)
 	{
-		//전송할 데이터를 입력한다.
-		strcpy_s(buffer, sizeof(buffer), "Ready!");
-
-		//데이터를 전송한다.
+		//데이터를 송신한다.
 		retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& remoteaddr, sizeof(remoteaddr));
 		if (retval == SOCKET_ERROR)
 		{
@@ -110,6 +110,8 @@ int main()
 		printf("스레드 생성 오류! \n");
 	else
 		CloseHandle(hThread);
+
+	Sleep(10000);
 
 	//윈속을 종료한다.
 	retval = WSACleanup();
