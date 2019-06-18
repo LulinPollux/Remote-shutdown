@@ -166,7 +166,7 @@ int shutdownMessageSender(int number)
 	//원격 IP, Port번호를 설정한다.
 	SOCKADDR_IN victimaddr = { 0 };
 	victimaddr.sin_family = AF_INET;
-	victimaddr.sin_addr.s_addr = inet_addr(victimList[number - 1]);
+	victimaddr.sin_addr.s_addr = inet_addr(victimList[number]);
 	victimaddr.sin_port = htons(SHUTDOWNPORT);
 
 	//통신에 사용할 변수를 선언한다.
@@ -242,7 +242,7 @@ int shutdownVictim()
 	}
 
 	//입력한 피해자에게 종료신호를 보낸다.
-	retval = shutdownMessageSender(number);
+	retval = shutdownMessageSender(number - 1);
 	if (retval != 0)
 		return 3;
 
