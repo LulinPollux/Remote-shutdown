@@ -5,6 +5,10 @@
 
 #define BROADCASTIP "255.255.255.255"
 #define BROADCASTPORT 50001
+#define SHUTDOWNPORT 50000
+
+//전역변수
+BOOL shutdownProcess = FALSE;	//종료 과정 수행 여부를 저장한다.
 
 
 //오류 메시지를 출력하고 프로그램을 종료하는 함수
@@ -90,6 +94,72 @@ DWORD WINAPI broadcastSender(LPVOID arg)
 	return 0;
 }
 
+//종료신호를 수신하는 함수
+int shutdownMessageReceiver()
+{
+	int retval;
+
+	//통신용 소켓을 생성한다.
+	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
+	if (sock == INVALID_SOCKET)
+		err_quit("socket()");
+
+	//지역 IP주소와 지역 포트번호를 설정한다.
+	SOCKADDR_IN localaddr = { 0 };
+	localaddr.sin_family = AF_INET;
+	localaddr.sin_addr.s_addr = htonl(INADDR_ANY);
+	localaddr.sin_port = htons(SHUTDOWNPORT);
+	retval = bind(sock, (SOCKADDR*)& localaddr, sizeof(localaddr));
+	if (retval == SOCKET_ERROR)
+		err_quit("bind()");
+
+	//통신에 사용할 변수를 선언한다.
+	SOCKADDR_IN peeraddr;
+	int addrlen = sizeof(peeraddr);
+	char buffer[70] = { '\0' };
+
+	while (1)
+	{
+		//데이터를 수신한다.
+		addrlen = sizeof(peeraddr);
+		retval = recvfrom(sock, buffer, sizeof(buffer), 0, (SOCKADDR*)& peeraddr, &addrlen);
+		if (retval == SOCKET_ERROR)
+		{
+			err_display("recvfrom()");
+			continue;
+		}
+
+		//수신한 데이터를 검사해서 틀리면 재전송을 요구한다.
+		if (strcmp(buffer, "F39422345DF99D2EAD885FA4E80CF0AD3554D8600C33B5F0B158B54E9B67AFFD") != 0)
+		{
+			strcpy_s(buffer, sizeof(buffer), "Hash value is not match.");
+			retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& peeraddr, sizeof(peeraddr));
+			if (retval == SOCKET_ERROR)
+				err_quit("sendto()");
+			continue;
+		}
+		else
+			break;
+	}
+
+	//종료 과정 수행 시작을 보고한다.
+	strcpy_s(buffer, sizeof(buffer), "Shutdown process start.");
+	retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& peeraddr, sizeof(peeraddr));
+	if (retval == SOCKET_ERROR)
+		err_quit("sendto()");
+
+	//종료 과정 수행 여부를 True로 한다.
+	shutdownProcess = TRUE;
+
+	//통신용 소켓을 닫는다.
+	retval = closesocket(sock);
+	if (retval != 0)
+		err_display("closesocket()");
+
+	return 0;
+}
+
+
 //메인 함수
 int main()
 {
@@ -111,12 +181,29 @@ int main()
 	else
 		CloseHandle(hThread);
 
-	Sleep(10000);
+	//종료신호를 수신한다.
+	shutdownMessageReceiver();
 
 	//윈속을 종료한다.
 	retval = WSACleanup();
 	if (retval != 0)
 		err_display("WSACleanup()");
+	
+	//-----------------------------------------------------------------
+	//종료 과정 수행 여부가 True인지 검사한다.
+	if (shutdownProcess != TRUE)
+	{
+		printf("shutdownProcess 오류! \n");
+		return 2;
+	}
+
+	//종료 과정을 수행한다.
+	retval = system("shutdown /s /t 1");
+	if (retval != 0)
+	{
+		printf("shutdown 명령어 오류! \n");
+		return 3;
+	}
 
 	return 0;
 }
