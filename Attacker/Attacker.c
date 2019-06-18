@@ -152,6 +152,13 @@ DWORD WINAPI broadcastReceiver(LPVOID arg)
 	return 0;
 }
 
+int shutdownVictim(int victimNumber)
+{
+	int retval;
+
+	return 0;
+}
+
 //메인 함수
 int main()
 {
@@ -176,11 +183,11 @@ int main()
 	//간이 셸을 이용한다.
 	while (1)
 	{
-		int input;
+		int input = 0;
 		printf("\n");
 		puts("1. 피해자 목록 확인");
-		puts("2. 종료시킬 피해자 선택");
-		printf("명령 입력: ");
+		puts("2. 피해자 종료시키기");
+		printf("번호 입력 >>> ");
 		scanf_s("%d", &input);
 
 		switch (input)
@@ -189,9 +196,14 @@ int main()
 			printVictimList();
 			break;
 		case 2:
-			//피해자 선택 코드
+			printf("종료시킬 피해자 IP의 번호를 입력하세요: ");
+			scanf_s("%d", &input);
+			retval = shutdownVictim(input);
+			if (retval != 0)
+				printf("오류 발생: %d", retval);
 			break;
 		default:
+			printf("번호를 잘못 입력했습니다. \n");
 			break;
 		}
 	}
