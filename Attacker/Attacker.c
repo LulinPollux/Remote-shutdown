@@ -5,9 +5,8 @@
 
 #define BROADCASTPORT 50000
 
-//전역변수 목록
+//전역변수
 char victimList[100][16] = { 0 };	//피해자 컴퓨터의 IP 목록
-//------------------------------------------------------------
 
 
 //피해자 목록을 출력하는 함수
@@ -21,7 +20,7 @@ void printVictimList()
 		else if (strcmp(victimList[i], "") == 0)
 			break;
 		else
-			printf("%d. %s\n", i, victimList[i]);
+			printf("%d. %s\n", i + 1, victimList[i]);
 	}
 }
 
@@ -32,9 +31,12 @@ int insertVictimList(char* victim)
 	{
 		//피해자 목록이 비어있다면 추가한다.
 		if (strcmp(victimList[i], "") == 0)
+		{
 			strcpy_s(victimList[i], sizeof(victimList[i]), victim);
+			break;
+		}
 
-		//비어있지 않다면 추가하려는 IP와 비교하여 같다면 추가하지 않는다.
+		//추가하려는 IP와 비교하여 같다면 추가하지 않는다.
 		else if (strcmp(victimList[i], victim) == 0)
 			break;
 	}
