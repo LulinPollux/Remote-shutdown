@@ -40,19 +40,10 @@ void err_display(char* msg)
 	LocalFree(msgBuf);
 }
 
-//메인 함수
-int main()
+//브로드캐스팅 메시지를 송신하는 스레드 함수
+DWORD WINAPI broadcastSender(LPVOID arg)
 {
 	int retval;
-
-	//윈속을 초기화한다.
-	WSADATA wsa;
-	retval = WSAStartup(MAKEWORD(2, 2), &wsa);
-	if (retval != 0)
-	{
-		printf("WSAStartup() 오류: %d\n", retval);
-		return 1;
-	}
 
 	//통신용 소켓을 생성한다.
 	SOCKET sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -72,13 +63,12 @@ int main()
 	remoteaddr.sin_port = htons(BROADCASTPORT);
 
 	//통신에 사용할 변수를 선언한다.
-	char buffer[512] = { '\0' };
+	char buffer[50] = { '\0' };
 
 	while (1)
 	{
 		//전송할 데이터를 입력한다.
-		printf("Send: ");
-		gets_s(buffer, sizeof(buffer));
+		strcpy_s(buffer, sizeof(buffer), "Ready!");
 
 		//데이터를 전송한다.
 		retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& remoteaddr, sizeof(remoteaddr));
@@ -88,14 +78,38 @@ int main()
 			continue;
 		}
 
-		//10초동안 대기한다.
-		//Sleep(10000);
+		//30초동안 대기한다.
+		Sleep(30000);
 	}
 
 	//통신용 소켓을 닫는다.
 	retval = closesocket(sock);
 	if (retval != 0)
 		err_display("closesocket()");
+
+	return 0;
+}
+
+//메인 함수
+int main()
+{
+	int retval;
+
+	//윈속을 초기화한다.
+	WSADATA wsa;
+	retval = WSAStartup(MAKEWORD(2, 2), &wsa);
+	if (retval != 0)
+	{
+		printf("WSAStartup() 오류: %d\n", retval);
+		return 1;
+	}
+
+	//브로드캐스트 메시지를 송신하는 스레드를 생성한다.
+	HANDLE hThread = CreateThread(NULL, 0, broadcastSender, NULL, 0, NULL);
+	if (hThread == NULL)
+		printf("스레드 생성 오류! \n");
+	else
+		CloseHandle(hThread);
 
 	//윈속을 종료한다.
 	retval = WSACleanup();

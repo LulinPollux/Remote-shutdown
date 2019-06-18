@@ -148,6 +148,8 @@ DWORD WINAPI broadcastReceiver(LPVOID arg)
 	retval = closesocket(sock);
 	if (retval != 0)
 		err_display("closesocket()");
+
+	return 0;
 }
 
 //메인 함수
