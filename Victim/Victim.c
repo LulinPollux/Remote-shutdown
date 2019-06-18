@@ -82,8 +82,8 @@ DWORD WINAPI broadcastSender(LPVOID arg)
 			continue;
 		}
 
-		//30초동안 대기한다.
-		Sleep(30000);
+		//10초동안 대기한다.
+		Sleep(10000);
 	}
 
 	//통신용 소켓을 닫는다.
