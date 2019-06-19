@@ -12,7 +12,7 @@ BOOL shutdownActivate = FALSE;	//종료 과정 수행 여부를 저장한다.
 
 
 //오류 메시지를 출력하고 프로그램을 종료하는 함수
-void err_quit(char* msg)
+void err_quit(const char* msg)
 {
 	//에러 코드로부터 오류 메시지를 만든다.
 	LPSTR msgBuf;
@@ -30,7 +30,7 @@ void err_quit(char* msg)
 }
 
 //오류 메시지를 출력하는 함수
-void err_display(char* msg)
+void err_display(const char* msg)
 {
 	//에러 코드로부터 오류 메시지를 만든다.
 	LPSTR msgBuf;
@@ -174,7 +174,6 @@ int shutdownProcess()
 	return 0;
 }
 
-
 //메인 함수
 int main()
 {
@@ -211,7 +210,7 @@ int main()
 		switch (retval)
 		{
 		case 1:
-			printf("shutdownProcess 오류! \n");
+			printf("shutdownActivate 오류! \n");
 			break;
 		case 2:
 			printf("shutdown 명령어 오류! \n");

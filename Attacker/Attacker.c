@@ -60,7 +60,7 @@ void deleteVictimList(int number)
 }
 
 //오류 메시지를 출력하고 프로그램을 종료하는 함수
-void err_quit(char* msg)
+void err_quit(const char* msg)
 {
 	//에러 코드로부터 오류 메시지를 만든다.
 	LPSTR msgBuf;
@@ -78,7 +78,7 @@ void err_quit(char* msg)
 }
 
 //오류 메시지를 출력하는 함수
-void err_display(char* msg)
+void err_display(const char* msg)
 {
 	//에러 코드로부터 오류 메시지를 만든다.
 	LPSTR msgBuf;
@@ -240,7 +240,6 @@ int shutdownVictim()
 
 	return 0;
 }
-
 
 //메인 함수
 int main()
