@@ -8,7 +8,7 @@
 #define SHUTDOWNPORT 50000
 
 //전역변수
-BOOL shutdownProcess = FALSE;	//종료 과정 수행 여부를 저장한다.
+BOOL shutdownActivate = FALSE;	//종료 과정 수행 여부를 저장한다.
 
 
 //오류 메시지를 출력하고 프로그램을 종료하는 함수
@@ -95,7 +95,7 @@ DWORD WINAPI broadcastSender(LPVOID arg)
 }
 
 //종료신호를 수신하는 함수
-int shutdownMessageReceiver()
+void shutdownMessageReceiver()
 {
 	int retval;
 
@@ -149,12 +149,27 @@ int shutdownMessageReceiver()
 		err_quit("sendto()");
 
 	//종료 과정 수행 여부를 True로 한다.
-	shutdownProcess = TRUE;
+	shutdownActivate = TRUE;
 
 	//통신용 소켓을 닫는다.
 	retval = closesocket(sock);
 	if (retval != 0)
 		err_display("closesocket()");
+}
+
+//종료과정을 수행하는 함수
+int shutdownProcess()
+{
+	int retval;
+
+	//종료 과정 수행 여부가 True인지 검사한다.
+	if (shutdownActivate != TRUE)
+		return 1;
+
+	//종료 과정을 수행한다.
+	retval = system("shutdown /s /t 1");
+	if (retval != 0)
+		return 2;
 
 	return 0;
 }
@@ -188,21 +203,23 @@ int main()
 	retval = WSACleanup();
 	if (retval != 0)
 		err_display("WSACleanup()");
-	
-	//-----------------------------------------------------------------
-	//종료 과정 수행 여부가 True인지 검사한다.
-	if (shutdownProcess != TRUE)
-	{
-		printf("shutdownProcess 오류! \n");
-		return 2;
-	}
 
 	//종료 과정을 수행한다.
-	retval = system("shutdown /s /t 1");
+	retval = shutdownProcess();
 	if (retval != 0)
 	{
-		printf("shutdown 명령어 오류! \n");
-		return 3;
+		switch (retval)
+		{
+		case 1:
+			printf("shutdownProcess 오류! \n");
+			break;
+		case 2:
+			printf("shutdown 명령어 오류! \n");
+			break;
+		default:
+			printf("정의되지 않은 오류코드입니다. \n");
+			break;
+		}
 	}
 
 	return 0;
