@@ -1,7 +1,6 @@
 ﻿#define _WINSOCK_DEPRECATED_NO_WARNINGS
 #pragma comment (lib, "ws2_32")
 #include <WinSock2.h>
-#include <stdio.h>
 
 #define BROADCASTIP "255.255.255.255"
 #define BROADCASTPORT 50001
